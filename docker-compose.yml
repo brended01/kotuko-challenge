@@ -1,0 +1,41 @@
+version: '3.1'
+services:
+  php-web:
+    container_name: kotuko-challenge
+    links: mysql
+    image: webdevops/php-nginx-dev:8.1
+    working_dir: /app
+    environment:
+      - WEB_DOCUMENT_ROOT=/app/public
+      - PHP_DISPLAY_ERRORS=1
+      - PHP_MEMORY_LIMIT=2048M
+      - PHP_MAX_EXECUTION_TIME=-1
+      - XDEBUG_MODE=debug
+      - XDEBUG_PROFILER_OUTPUT_DIR=/logs/xdebug
+      - XDEBUG_START_WITH_REQUEST=yes
+      - XDEBUG_REMOTE_PORT=9003     
+      - XDEBUG_MAX_NESTING_LEVEL=1000
+      - XDEBUG_REMOTE_HOST=host.docker.internal
+      - XDEBUG_PROFILER_ENABLE=1
+      - XDEBUG_REMOTE_ENABLE=1  
+      - XDEBUG_DISCOVER_CLIENT_HOST=1
+      - COMPOSER_VERSION=2
+    tty: true
+    
+    ports:
+      - "8070:80"       
+    volumes:
+      - .:/app:rw,cached 
+      - ./logs/xdebug:/logs/xdebug     
+    links:
+      - mysql
+  
+  mysql:
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    image: mysql    
+    ports:
+      - 3307:3306
+    environment:      
+      MYSQL_DATABASE: kotuko
+      MYSQL_ROOT_PASSWORD: root
