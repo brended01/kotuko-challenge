@@ -16,12 +16,13 @@ class GuardianController extends Controller
     }
 
     public function checkKebabCase($category){
-        if(ctype_lower($category)){
-            if($category[0] != '-' && $category[strlen($category)-1] != '-'){
-                return true;
-            }
+        if($category[0] == '-' || $category[strlen($category)-1] == '-')
+            return false;
+        for ($i = 0; strlen($category)-1 >= $i; $i++){
+            if(($category[$i] < 'a' || $category[$i] > 'z') && $category[$i] != '-')
+                return false;
         }
-        return false;
+        return true;
     }
 
     public function getGuardianCategory($category){
