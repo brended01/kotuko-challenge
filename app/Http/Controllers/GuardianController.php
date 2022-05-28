@@ -7,7 +7,21 @@ use Illuminate\Http\Request;
 class GuardianController extends Controller
 {
     public function index($category){
-        $response = $this->getGuardianCategory($category);
+        if($this->checkKebabCase($category)){
+            $response = $this->getGuardianCategory($category);
+            return $response;
+        }else{
+            return "Not well formed";
+        }
+    }
+
+    public function checkKebabCase($category){
+        if(ctype_lower($category)){
+            if($category[0] != '-' && $category[strlen($category)-1] != '-'){
+                return true;
+            }
+        }
+        return false;
     }
 
     public function getGuardianCategory($category){
