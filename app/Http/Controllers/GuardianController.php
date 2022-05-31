@@ -70,7 +70,7 @@ class GuardianController extends Controller
         date_default_timezone_set('Europe/Rome');
 
             $dbResponse = DB::table('caching')->where('tag',$category)->get();
-            if(!empty($dbResponse)){
+            if(sizeof($dbResponse) != 0){
                 
                 if($dbResponse[0]->expiryDate > date('Y-m-d H:i:s')){
                     return $dbResponse[0]->rss;
@@ -147,7 +147,7 @@ class GuardianController extends Controller
      */
     public function getGuardianCategory($category){
         return Http::withHeaders([
-            'api-key' => '61bd1f09-3ef5-40d6-b1dc-0d2ab0305ff4',
+            'api-key' => env('API_KEY_GUARDIAN'),
         ])->get('https://content.guardianapis.com/search', [
             'section' => $category,
         ]);
