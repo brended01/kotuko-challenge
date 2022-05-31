@@ -10,7 +10,14 @@ use Illuminate\Support\Facades\DB;
 
 class GuardianController extends Controller
 {
+    /**
+     * Returns a page formatted in rss depending on the search.
+     *
+     * @param [string] $category
+     * @return void
+     */
     public function index($category){
+        $err = "";
         if($this->checkKebabCase($category)){
             if($response = $this->checkCaching($category)){
                 return $response;
@@ -20,17 +27,26 @@ class GuardianController extends Controller
                     if($this->storeRss($category,$rssGenerated)){
                         return $rssGenerated;
                     }else{
-                        return "Failed caching";
+                        $err = "Failed caching";
                     }
                 }else{
-                    return "There is no result";
+                    $err = "There is no result";
                 }
             }
         }else{
-            return "Not well formed";
+            $err = "The search must be done with the kebab case convention";
         }
+        return $err;
     }
 
+
+    /**
+     * Stores data for caching in the database
+     *
+     * @param [string] $tag
+     * @param [Feed] $rss
+     * @return bool
+     */
     public function storeRss($tag,$rss){
 
         if(DB::table('caching')
@@ -44,12 +60,17 @@ class GuardianController extends Controller
         return false;
     }
 
-
+    /**
+     * Check if the requested category is already present in the database and if it has not expired
+     *
+     * @param [string] $category
+     * @return void
+     */
     public function checkCaching($category){
         date_default_timezone_set('Europe/Rome');
 
             $dbResponse = DB::table('caching')->where('tag',$category)->get();
-            if(sizeof($dbResponse) != 0){
+            if(!empty($dbResponse)){
                 
                 if($dbResponse[0]->expiryDate > date('Y-m-d H:i:s')){
                     return $dbResponse[0]->rss;
@@ -64,6 +85,14 @@ class GuardianController extends Controller
         }
     }
 
+
+    /**
+     * Generates with the result of the request to the guardian, an object formatted according to the rss convention
+     *
+     * @param [array] $response
+     * @param [string] $category
+     * @return void
+     */
     public function generateRSS($response,$category){
         $feed = new Feed();
         
@@ -89,23 +118,38 @@ class GuardianController extends Controller
         return $feed;
     }
 
-
+    /**
+     * Check if the search was done using the kebabcase notation
+     *
+     * @param [string] $category
+     * @return bool
+     */
     public function checkKebabCase($category){
         if($category[0] == '-' || $category[strlen($category)-1] == '-')
+        {
             return false;
+        }
+            
         for ($i = 0; strlen($category)-1 >= $i; $i++){
-            if(($category[$i] < 'a' || $category[$i] > 'z') && $category[$i] != '-')
+            if(($category[$i] < 'a' || $category[$i] > 'z') && $category[$i] != '-'){
                 return false;
+            }
+                
         }
         return true;
     }
 
+    /**
+     * Richiesta api a the guardian con la categoria cercata
+     *
+     * @param [string] $category
+     * @return array
+     */
     public function getGuardianCategory($category){
-        $response = Http::withHeaders([
+        return Http::withHeaders([
             'api-key' => '61bd1f09-3ef5-40d6-b1dc-0d2ab0305ff4',
         ])->get('https://content.guardianapis.com/search', [
             'section' => $category,
         ]);
-        return $response;
     }
 }
